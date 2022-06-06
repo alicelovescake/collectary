@@ -22,6 +22,8 @@ interface ActionData {
   errors: {
     email?: string;
     password?: string;
+    name?: string;
+    username?: string;
   };
 }
 
@@ -29,11 +31,27 @@ export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const email = formData.get("email");
   const password = formData.get("password");
+  const name = formData.get("name");
+  const username = formData.get("username");
   const redirectTo = safeRedirect(formData.get("redirectTo"), "/");
 
   if (!validateEmail(email)) {
     return json<ActionData>(
       { errors: { email: "Email is invalid" } },
+      { status: 400 }
+    );
+  }
+
+  if (typeof name !== "string" || name.length === 0) {
+    return json<ActionData>(
+      { errors: { name: "Name is required" } },
+      { status: 400 }
+    );
+  }
+
+  if (typeof username !== "string" || username.length === 0) {
+    return json<ActionData>(
+      { errors: { username: "Username is required" } },
       { status: 400 }
     );
   }
@@ -59,8 +77,7 @@ export const action: ActionFunction = async ({ request }) => {
       { status: 400 }
     );
   }
-
-  const user = await createUser(email, password);
+  const user = await createUser(email, password, name, username);
 
   return createUserSession({
     request,
@@ -82,12 +99,18 @@ export default function Join() {
   const actionData = useActionData() as ActionData;
   const emailRef = React.useRef<HTMLInputElement>(null);
   const passwordRef = React.useRef<HTMLInputElement>(null);
+  const nameRef = React.useRef<HTMLInputElement>(null);
+  const usernameRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (actionData?.errors?.email) {
       emailRef.current?.focus();
     } else if (actionData?.errors?.password) {
       passwordRef.current?.focus();
+    } else if (actionData?.errors?.name) {
+      nameRef.current?.focus();
+    } else if (actionData?.errors?.username) {
+      usernameRef.current?.focus();
     }
   }, [actionData]);
 
@@ -144,6 +167,58 @@ export default function Join() {
               {actionData?.errors?.password && (
                 <div className="pt-1 text-red-700" id="password-error">
                   {actionData.errors.password}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Name
+            </label>
+            <div className="mt-1">
+              <input
+                id="name"
+                ref={nameRef}
+                name="name"
+                type="name"
+                autoComplete="new-name"
+                aria-invalid={actionData?.errors?.name ? true : undefined}
+                aria-describedby="name-error"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+              />
+              {actionData?.errors?.name && (
+                <div className="pt-1 text-red-700" id="name-error">
+                  {actionData.errors.name}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Username
+            </label>
+            <div className="mt-1">
+              <input
+                id="username"
+                ref={usernameRef}
+                name="username"
+                type="username"
+                autoComplete="new-username"
+                aria-invalid={actionData?.errors?.username ? true : undefined}
+                aria-describedby="username-error"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+              />
+              {actionData?.errors?.username && (
+                <div className="pt-1 text-red-700" id="username-error">
+                  {actionData.errors.username}
                 </div>
               )}
             </div>

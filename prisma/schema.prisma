@@ -11,6 +11,8 @@ model User {
   id          String             @id @default(cuid())
   email       String             @unique
   password    Password?
+  name        String
+  username    String
   lists       List[]
   sharedLists ListCollaborator[]
   comments    Comment[]
@@ -34,7 +36,7 @@ model List {
   userId        String
   name          String
   description   String?
-  public        Boolean            @default(false)
+  isPublic      Boolean            @default(false)
   allowComments Boolean            @default(false)
   collaborators ListCollaborator[]
   comments      Comment[]
